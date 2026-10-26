@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pré-projeto com IA</title>
+<style>
+:root{
+  --bg:#f7f6f2; --card:#ffffff; --ink:#1d2321; --muted:#5d6763; --line:#dedbd2;
+  --accent:#2f6b4f; --accent-soft:#e3efe8; --warn:#9a6a12; --warn-soft:#f6ecd6;
+  --bad:#a33c2c; --bad-soft:#f6e1dc;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#151918; --card:#1e2422; --ink:#e7ebe9; --muted:#9aa5a0; --line:#323a37;
+    --accent:#7cc3a0; --accent-soft:#213a2f; --warn:#e0b45c; --warn-soft:#3a3020;
+    --bad:#e98b7a; --bad-soft:#3d2622;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151918; --card:#1e2422; --ink:#e7ebe9; --muted:#9aa5a0; --line:#323a37;
+  --accent:#7cc3a0; --accent-soft:#213a2f; --warn:#e0b45c; --warn-soft:#3a3020;
+  --bad:#e98b7a; --bad-soft:#3d2622;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);
+  display:flex;gap:4px;overflow-x:auto;padding:8px 16px;font-size:14px}
+nav a{color:var(--muted);text-decoration:none;padding:4px 10px;border-radius:999px;white-space:nowrap}
+nav a:hover,nav a.on{background:var(--accent-soft);color:var(--accent)}
+section{max-width:980px;margin:0 auto;padding:56px 16px 40px;min-height:88vh;scroll-margin-top:44px}
+.num{font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--accent);text-transform:uppercase}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.15;margin:8px 0 12px}
+h2{font-size:clamp(24px,3.4vw,32px);line-height:1.2;margin:6px 0 20px}
+h3{font-size:18px;margin:0 0 6px}
+p{margin:0 0 12px}
+.lead{font-size:19px;color:var(--muted);max-width:720px}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:16px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tag{display:inline-block;font-size:13px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.ok{background:var(--accent-soft);color:var(--accent)}
+.mid{background:var(--warn-soft);color:var(--warn)}
+.no{background:var(--bad-soft);color:var(--bad)}
+.box{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:14px 16px;margin:20px 0}
+.box.warn{border-left-color:var(--warn)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:8px 0 20px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.kpi b{display:block;font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi span{font-size:14px;color:var(--muted)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+figure{margin:0}
+figure img{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:#fff}
+figcaption{font-size:14px;color:var(--muted);margin-top:6px}
+ol.steps{padding-left:22px;margin:0}
+ol.steps li{margin:0 0 12px}
+details{background:var(--card);border:1px solid var(--line);border-radius:8px;margin:10px 0}
+summary{cursor:pointer;padding:12px 16px;font-weight:600}
+details > div{padding:0 16px 14px}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px;overflow-x:auto;font-size:13px;line-height:1.45}
+code{font-family:ui-monospace,Consolas,monospace;font-size:.92em}
+blockquote{margin:8px 0;padding-left:12px;border-left:3px solid var(--line);color:var(--muted);font-size:15px}
+.cover{display:flex;flex-direction:column;justify-content:center}
+.tablewrap{overflow-x:auto}
+@media (max-width:640px){
+  body{font-size:16px}
+  .pair{grid-template-columns:1fr}
+  section{padding-top:36px;min-height:auto}
+  th,td{padding:8px}
+}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a href="#inicio">Início</a>
+  <a href="#pedido">1 · Pedido</a>
+  <a href="#caso">2 · Um processo</a>
+  <a href="#escala">3 · 30 processos</a>
+  <a href="#atlas">4 · Atlas</a>
+  <a href="#metodo">5 · Método</a>
+  <a href="#ia">6 · Como a IA ajudou</a>
+  <a href="#pratica">7 · Mão na massa</a>
+  <a href="#proximos">8 · Próximos passos</a>
+  <a href="#anexo">Anexo</a>
+</nav>
+
+<section id="inicio" class="cover">
+  <div class="num">Encontro individual · 26/10/2026</div>
+  <h1>Pré-projeto: o que dá para automatizar com IA</h1>
+  <p class="lead">Teste com dados públicos reais de Goiás (região do Meia Ponte), feito em 23/10/2026 a partir dos quatro objetivos que você enviou.</p>
+  <div class="box">
+    <h3>Resumo</h3>
+    <p>O <b>item 3</b> (suprimiu? quando?) já funciona: o Earth Engine faz a conta sem baixar imagem nenhuma, e 30 autorizações rodam em cerca de 30 segundos.</p>
+    <p style="margin:0">Os <b>itens 1, 2 e 4</b> dependem de um dado que não está disponível para download: o mapa do Atlas Goiás em formato vetorial.</p>
+  </div>
+  <p class="muted small">Estágio docência · Victor Amaral · use as setas ← → para trocar de seção</p>
+</section>
+
+<section id="pedido">
+  <div class="num">1 · Seu pedido</div>
+  <h2>Os quatro objetivos, um por um</h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Objetivo do pré-projeto</th><th>Situação</th><th>O que falta</th></tr>
+    <tr><td><b>1.</b> Cruzar remanescentes do Atlas com as autorizações de supressão (ASV)</td><td><span class="tag mid">Parcial</span></td><td>Base vetorial do Atlas. Hoje só dá para consultar ponto a ponto, com perdas (seção 4).</td></tr>
+    <tr><td><b>2.</b> Área e taxa de avanço do licenciamento por classe do Atlas</td><td><span class="tag no">Não feito</span></td><td>Depende do item 1. A taxa é <i>área licenciada ÷ remanescente</i>.</td></tr>
+    <tr><td><b>3.</b> Verificar por série temporal se a área foi suprimida, e quando</td><td><span class="tag ok">Funciona</span></td><td>Definir a amostra e rodar na sua conta do Earth Engine.</td></tr>
+    <tr><td><b>4.</b> Proporcionalidade por formação vegetal</td><td><span class="tag mid">Exemplo</span></td><td>Sai da mesma tabela do item 3, mas precisa de amostra maior (seção 3).</td></tr>
+  </table>
+  </div>
+  <div class="box">
+    <h3>“Menos tempo na busca das imagens”</h3>
+    <p style="margin:0">Você não precisa procurar nem baixar cenas. O script pega o polígono de cada ASV, pede ao Earth Engine o MapBiomas e o NDVI (Sentinel-2 e Landsat) ano a ano e devolve uma tabela. As imagens de antes e depois só são geradas quando você quer olhar um caso.</p>
+  </div>
+</section>
+
+<section id="caso">
+  <div class="num">2 · Item 3 em um processo</div>
+  <h2>Processo 14962016: licença em 2019, supressão no início de 2020</h2>
+  <div class="pair">
+    <figure><img src="../serie_607_2019.png" alt="Imagem Sentinel-2 de 2019 com os polígonos da ASV cobertos por vegetação"><figcaption><b>2019, antes.</b> Sentinel-2, cor natural. Contorno: área autorizada.</figcaption></figure>
+    <figure><img src="../serie_607_2020.png" alt="Imagem Sentinel-2 de 2020 com os mesmos polígonos já desmatados"><figcaption><b>2020, depois.</b> Mesma área, já com solo exposto.</figcaption></figure>
+  </div>
+  <figure style="margin:20px auto 0;max-width:720px"><img src="../serie_607.png" alt="Gráfico do NDVI mensal de 2018 a 2022 com queda no início de 2020"><figcaption>NDVI mensal (Sentinel-2): 0,79 em janeiro de 2020 e 0,35 em março. O MapBiomas, que é anual, diz só “2020”; a série mensal aponta o trimestre.</figcaption></figure>
+  <div class="box warn">
+    <p style="margin:0"><b>Atenção ao ler a série:</b> o NDVI cai em toda estação seca e volta com a chuva. Supressão é a queda que <i>não volta</i> no período chuvoso seguinte. Por isso o critério compara médias anuais, e não o mês mais baixo.</p>
+  </div>
+</section>
+
+<section id="escala">
+  <div class="num">3 · Item 3 em escala</div>
+  <h2>30 autorizações da região do Meia Ponte</h2>
+  <div class="kpis">
+    <div class="kpi"><b>1.152 ha</b><span>autorizados para supressão</span></div>
+    <div class="kpi"><b>779 ha</b><span>eram vegetação nativa no ano anterior à licença (MapBiomas)</span></div>
+    <div class="kpi"><b>471 ha</b><span>suprimidos depois da licença, ou 60,5% da vegetação nativa</span></div>
+    <div class="kpi"><b>25 de 30</b><span>autorizações com supressão detectada</span></div>
+  </div>
+  <div class="box">
+    <h3>Conferência independente</h3>
+    <p style="margin:0">Sem usar o MapBiomas, comparamos o NDVI dos dois anos antes com o dos dois anos depois da licença. Nos 25 processos marcados como suprimidos ele caiu <b>−0,25</b>; nos outros 5 ficou estável (<b>+0,01</b>). As duas fontes concordam.</p>
+  </div>
+  <h3 style="margin-top:24px">Por formação dominante (item 4)</h3>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Formação</th><th class="n">Processos</th><th class="n">Vegetação suprimida</th></tr>
+    <tr><td>Formação Florestal</td><td class="n">17</td><td class="n">63,8%</td></tr>
+    <tr><td>Formação Savânica</td><td class="n">6</td><td class="n">59,8%</td></tr>
+    <tr><td>Pastagem</td><td class="n">5</td><td class="n">28,6%</td></tr>
+    <tr><td>Mosaico de usos</td><td class="n">2</td><td class="n">73,1%</td></tr>
+  </table>
+  </div>
+  <p class="muted small" style="margin-top:8px">É uma demonstração, não um resultado. Em outro sorteio de 30 processos, Florestal e Savânica trocaram de posição. MapBiomas Coleção 11; percentuais sobre a vegetação nativa existente antes da licença.</p>
+</section>
+
+<section id="atlas">
+  <div class="num">4 · Itens 1 e 2</div>
+  <h2>O gargalo é o dado do Atlas, não o processamento</h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th>O que testamos</th><th>Resultado</th></tr>
+    <tr><td>Download vetorial (WFS)</td><td>Desligado no servidor do Atlas. Não há shapefile público.</td></tr>
+    <tr><td>Mapa publicado (WMS)</td><td>Responde, e a consulta por ponto devolve a classe, a área e o município do fragmento.</td></tr>
+    <tr><td>Confiabilidade da consulta por ponto</td><td>Em 60 pontos de teste, havia remanescente em 14, e a consulta encontrou só <b>7</b>.</td></tr>
+    <tr><td>Cobertura</td><td>Só as bacias do Meia Ponte e dos Bois estão mapeadas.</td></tr>
+  </table>
+  </div>
+  <p style="margin-top:16px">Mesmo assim, uma estimativa por 425 pontos indica que <b>cerca de 87% da área autorizada está fora dos remanescentes mapeados</b>. O número está inflado pelas duas limitações acima e serve só como ordem de grandeza.</p>
+  <div class="box">
+    <h3>Encaminhamento</h3>
+    <p style="margin:0">Pedir o shapefile do Atlas à SEMAD ou à equipe que produz o Atlas. Com ele, os itens 1, 2 e 4 se resolvem com uma interseção de polígonos e uma tabela, e o mesmo script dá conta.</p>
+  </div>
+</section>
+
+<section id="metodo">
+  <div class="num">5 · Decisões de método</div>
+  <h2>O que é decisão sua (e a banca vai perguntar)</h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Decisão</th><th>Por que importa</th></tr>
+    <tr><td><b>Versão do MapBiomas</b></td><td>Nos mesmos 30 polígonos, a Coleção 10 dá 53,5% de supressão e a 11 dá 60,5%. A coleção nova revisa anos antigos. Fixe uma e cite.</td></tr>
+    <tr><td><b>Linha de base</b></td><td>Medir a vegetação no ano <i>anterior</i> à licença. Medir no próprio ano já inclui parte da supressão.</td></tr>
+    <tr><td><b>Amostra</b></td><td>30 processos sorteados não sustentam comparação entre formações. Estratificar por classe e tamanho, ou usar todas as ASVs da bacia.</td></tr>
+    <tr><td><b>Área considerada</b></td><td>Área requerida, área autorizada e vegetação existente são coisas diferentes (campo <code>feicao</code> da base).</td></tr>
+    <tr><td><b>Período</b></td><td>O MapBiomas vai até 2025. Licenças de 2025 e 2026 ainda não têm “depois”.</td></tr>
+    <tr><td><b>Polígonos pequenos</b></td><td>Muitas ASVs têm poucos hectares. Em pixel de 30 m, a borda pesa: agregar por processo ou usar Sentinel-2 (10 m).</td></tr>
+    <tr><td><b>Atlas × MapBiomas</b></td><td>São mapeamentos diferentes, com classes e resultados diferentes. Compare os dois antes de usar um como substituto do outro.</td></tr>
+  </table>
+  </div>
+  <p class="muted small" style="margin-top:8px">Detalhe técnico: a base pública de ASV vem com geometrias repetidas (uma por atividade do processo). Sem remover as duplicatas, a área sobe 7%.</p>
+</section>
+
+<section id="ia">
+  <div class="num">6 · Como a IA foi usada</div>
+  <h2>Ela achou as fontes e escreveu o código. Os erros foram silenciosos.</h2>
+  <p>Num agente de programação (opencode, com DeepSeek V4.1 Flash e depois MiniMax M3.1 Flash), cinco pedidos em linguagem comum: o seu texto, “revise e procure erros”, “por que a Coleção 10?”, “troque de modelo e confira se atende ao que a aluna pediu” e “registre tudo”. A IA encontrou a base de ASV no SIGA, o MapBiomas no Earth Engine e o serviço do Atlas, escreveu os scripts e rodou tudo.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>Erro que a IA cometeu</th><th>Efeito</th><th>O que teria pegado</th></tr>
+    <tr><td>Nome errado no campo de saída</td><td>Tabela inteira com zeros, sem erro</td><td>Conferir um valor à mão</td></tr>
+    <tr><td>Tolerância em graus achando que era metros</td><td>Área de um polígono caiu de 192 para 92 ha</td><td>Comparar a área com outra ferramenta</td></tr>
+    <tr><td>Linha de base no ano da licença</td><td>Mais vegetação suprimida do que existia</td><td>Checar se alguma taxa passa de 100%</td></tr>
+    <tr><td>Duplicatas da base pública</td><td>+7% de área</td><td>Contar geometrias únicas</td></tr>
+    <tr><td>Janela do NDVI incluía o ano do evento</td><td>Supressão parecia acontecer no mesmo ano da licença</td><td>Olhar um caso no gráfico</td></tr>
+    <tr><td>Coleção antiga do MapBiomas, sem motivo</td><td>Taxa 7 pontos menor</td><td>Perguntar “por que essa versão?” (foi uma pessoa que perguntou)</td></tr>
+  </table>
+  </div>
+  <div class="box"><p style="margin:0"><b>Regra prática:</b> peça o código à IA, mas confira os números. Todos os erros acima produziram uma tabela com cara de certa.</p></div>
+</section>
+
+<section id="pratica">
+  <div class="num">7 · Mão na massa</div>
+  <h2>Uma ficha por processo, direto no navegador</h2>
+  <p>O script <code>ficha_asv_code_editor.js</code> roda no Code Editor do Earth Engine, sem instalar nada. Você desenha a área da ASV, informa o ano da licença e clica em <b>Run</b>.</p>
+  <ol class="steps">
+    <li>Abra <b>code.earthengine.google.com</b> com uma conta Google cadastrada no Earth Engine (uso acadêmico é gratuito; o cadastro pede um projeto do Google Cloud).</li>
+    <li>Cole o script, troque <code>ANO_LICENCA</code> e desenhe o polígono da ASV no mapa.</li>
+    <li>Clique em <b>Run</b>. Em poucos segundos saem os números e o gráfico.</li>
+  </ol>
+  <div class="tablewrap">
+  <table>
+    <tr><th>O que aparece</th><th>Para que serve</th></tr>
+    <tr><td>Vegetação nativa no ano anterior à licença (ha)</td><td>Linha de base do item 3</td></tr>
+    <tr><td>Hectares suprimidos a partir da licença, por ano</td><td>Responde “suprimiu?” e “em que ano?”</td></tr>
+    <tr><td>Gráfico do NDVI mês a mês</td><td>Aponta o mês da supressão</td></tr>
+    <tr><td>Imagens da seca antes e depois, e o mapa do ano da supressão</td><td>Conferência visual, para a figura do trabalho</td></tr>
+  </table>
+  </div>
+  <div class="box warn"><p style="margin:0"><b>Conferido:</b> no processo 14962016, a mesma conta aponta 72,8 ha suprimidos em 2020 e a queda do NDVI entre janeiro (0,83) e março (0,44) de 2020, como na análise completa. A base pública traz duas feições para esse processo (242 ha no total, contra 112 ha da feição usada antes): confira qual é a área autorizada antes de usar.</p></div>
+</section>
+
+<section id="proximos">
+  <div class="num">8 · Próximos passos</div>
+  <h2>Proposta para depois do encontro</h2>
+  <ol class="steps">
+    <li><b>Pedir o shapefile do Atlas</b> (SEMAD ou equipe do Atlas). Destrava os itens 1, 2 e 4.</li>
+    <li><b>Definir recorte e amostra</b>: todas as ASVs da bacia ou uma amostra estratificada por formação e tamanho.</li>
+    <li><b>Rodar na sua conta</b>: cadastrar-se no Earth Engine e usar a ficha da seção 7; os scripts em Python do anexo ficam para processar muitos processos de uma vez.</li>
+    <li><b>Ferramenta para o dia a dia</b>: a ficha da seção 7 já faz isso para um processo desenhado à mão. O próximo passo é ela ler o polígono direto da base de ASV pelo número do processo.</li>
+  </ol>
+</section>
+
+<section id="anexo">
+  <div class="num">Anexo</div>
+  <h2>Arquivos, comandos e registro</h2>
+
+  <details>
+    <summary>Scripts e como rodar</summary>
+    <div>
+      <div class="tablewrap">
+      <table>
+        <tr><th>Script</th><th>O que faz</th></tr>
+        <tr><td><code>baixa_asv.py</code></td><td>Baixa as ASVs do serviço público do SIGA/GO para um recorte</td></tr>
+        <tr><td><code>analisa_asv.py</code></td><td>Por ASV: vegetação antes da licença, ano da supressão (MapBiomas) e NDVI anual</td></tr>
+        <tr><td><code>serie_mensal.py</code></td><td>Série mensal (Sentinel-2) e anual (Landsat), imagens de antes e depois e o gráfico</td></tr>
+        <tr><td><code>atlas_cruzamento.py</code></td><td>Estima a classe do Atlas por amostragem de pontos</td></tr>
+        <tr><td><code>resumo_resultados.py</code></td><td>Tabelas por formação e por ano</td></tr>
+      </table>
+      </div>
+<pre>pip install earthengine-api geopandas shapely requests pandas pillow
+earthengine authenticate
+
+python baixa_asv.py --bbox "-50.6,-18.3,-48.4,-16.0" --saida ..\dados\asv_meiaponte.geojson
+python analisa_asv.py ..\dados\asv_meiaponte.geojson --min-area 5 --max 30 --projeto SEU_PROJETO
+python serie_mensal.py --geojson ..\dados\asv_meiaponte.geojson --id 607 --de 2018 --ate 2022 --fig ..\dados\serie_607.png</pre>
+      <p class="small muted">Fontes: SIGA/SEMAD-GO (camada <code>vw_asv_ipe_sga_publico</code>), WMS do Atlas Goiás (<code>atlas_remanescentes</code>), MapBiomas Coleção 11, Sentinel-2 SR Harmonized e Landsat Coleção 2 no Google Earth Engine.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Registro da sessão com a IA (turnos e modelos)</summary>
+    <div>
+      <div class="tablewrap">
+      <table>
+        <tr><th>Turno</th><th>Pedido</th><th>Modelo</th><th>Resultado</th></tr>
+        <tr><td>1</td><td>Contexto da aluna e “respostas concretas e testadas”</td><td>DeepSeek V4.1 Flash</td><td>Fontes, download das ASVs, primeiro detector</td></tr>
+        <tr><td>2</td><td>“Pense e repense… procure problemas e bugs”</td><td>DeepSeek V4.1 Flash</td><td>Seis erros corrigidos, nova execução</td></tr>
+        <tr><td>3</td><td>“E por que Coleção 10 e não 11?”</td><td>DeepSeek V4.1 Flash</td><td>Troca para a Coleção 11</td></tr>
+        <tr><td>4</td><td>Revisão com outro modelo: “atende ao que a aluna pediu?”</td><td>MiniMax M3.1 Flash</td><td>Teste do Atlas, série mensal e imagens</td></tr>
+        <tr><td>5</td><td>“Registre bem o que foi feito”</td><td>MiniMax M3.1 Flash</td><td>README e primeira apresentação</td></tr>
+      </table>
+      </div>
+      <p class="small muted" style="margin-top:8px">Custo: algumas dezenas de chamadas ao Earth Engine e cerca de 650 consultas ao serviço do Atlas. Nenhuma imagem baixada.</p>
+    </div>
+  </details>
+</section>
+
+<script>
+(function(){
+  var ids=[].map.call(document.querySelectorAll('section'),function(s){return s.id});
+  var links=document.querySelectorAll('nav a');
+  function atual(){
+    var y=window.scrollY+window.innerHeight*0.35, i=0;
+    ids.forEach(function(id,k){ if(document.getElementById(id).offsetTop<=y) i=k; });
+    return i;
+  }
+  function marcar(){ var i=atual(); links.forEach(function(a,k){ a.classList.toggle('on',k===i); }); }
+  window.addEventListener('scroll',marcar,{passive:true}); marcar();
+  document.addEventListener('keydown',function(e){
+    if(e.target.closest && e.target.closest('summary,input,textarea')) return;
+    var i=atual(), j=null;
+    if(e.key==='ArrowRight'||e.key==='PageDown') j=Math.min(i+1,ids.length-1);
+    if(e.key==='ArrowLeft'||e.key==='PageUp') j=Math.max(i-1,0);
+    if(j!==null){ e.preventDefault(); document.getElementById(ids[j]).scrollIntoView(); }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uma pergunta, dois prompts e seis erros silenciosos</title>
+<style>
+  :root{
+    --ink:#16241e; --muted:#5f7168; --paper:#f6f3ea; --card:#fffdf6;
+    --green:#2c5a43; --green-2:#3f7a5c; --lime:#8fb339; --amber:#c07a17;
+    --red:#a33a2a; --line:#ddd7c7; --shadow:0 1px 2px rgba(22,36,30,.06),0 8px 24px rgba(22,36,30,.05);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:0 28px}
+  a{color:var(--green-2)}
+  code{font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;font-size:.88em;
+    background:#ece7d8;padding:.12em .38em;border-radius:4px}
+  pre{background:#1d2b25;color:#e9e5d8;padding:14px 16px;border-radius:10px;overflow:auto;font-size:13px;line-height:1.5;margin:.6em 0}
+  pre code{background:none;padding:0;color:inherit;font-size:13px}
+  .del{color:#f19b8e;text-decoration:line-through}
+  .ins{color:#b6d98a}
+
+  /* capa */
+  header.capa{padding:64px 0 40px;border-bottom:1px solid var(--line);background:
+    radial-gradient(900px 320px at 88% -10%,rgba(143,179,57,.18),transparent 70%),
+    radial-gradient(700px 260px at 0% 0%,rgba(44,90,67,.10),transparent 70%);}
+  .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  h1{font-size:clamp(30px,4.6vw,50px);line-height:1.08;letter-spacing:-.02em;margin:.35em 0 .3em;font-weight:750}
+  .sub{font-size:clamp(16px,2vw,19px);color:#3c4b44;max-width:46em;margin:0}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+  .chip{font-size:12.5px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 12px;color:#3c4b44;box-shadow:var(--shadow)}
+  .chip b{color:var(--green)}
+
+  /* nav */
+  nav{position:sticky;top:0;z-index:20;background:rgba(246,243,234,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;gap:6px;overflow:auto;padding:10px 28px}
+  nav a{font-size:13px;text-decoration:none;color:#3c4b44;padding:6px 11px;border-radius:999px;white-space:nowrap}
+  nav a:hover{background:#e9e4d4;color:var(--ink)}
+
+  section{padding:52px 0;border-bottom:1px solid var(--line)}
+  .kicker{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .num{font-size:12px;font-weight:700;color:#fff;background:var(--green);width:24px;height:24px;border-radius:50%;display:grid;place-items:center}
+  h2{font-size:clamp(23px,3vw,31px);letter-spacing:-.015em;margin:0 0 14px;line-height:1.15}
+  h3{font-size:17px;margin:26px 0 8px;letter-spacing:-.01em}
+  p{margin:.55em 0}
+  .lead{font-size:17.5px;color:#33443c;max-width:44em}
+  .muted{color:var(--muted)}
+  .small{font-size:13.5px}
+
+  .quote{border-left:3px solid var(--amber);padding:10px 0 10px 18px;margin:22px 0;font-size:17px;color:#33443c;font-style:italic}
+  .quote span{display:block;font-style:normal;font-size:13px;color:var(--muted);margin-top:8px}
+
+  /* fluxo */
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:22px 0 8px}
+  .flow .step{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:7px 11px;font-size:13px;box-shadow:var(--shadow)}
+  .flow .arr{color:#b7b09c;font-size:14px}
+  .flow .step.hot{border-color:#d9c08a;background:#fdf6e3}
+
+  /* tabelas */
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{padding:9px 12px;text-align:left;border-bottom:1px solid #ebe6d7}
+  th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:650;background:#fbf8ef}
+  tr:last-child td{border-bottom:none}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .up{color:var(--red);font-weight:650}
+  .down{color:var(--green);font-weight:650}
+
+  /* kpis */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:24px 0}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 16px;box-shadow:var(--shadow)}
+  .kpi .v{font-size:clamp(24px,3vw,31px);font-weight:750;letter-spacing:-.02em;line-height:1.1}
+  .kpi .l{font-size:12.5px;color:var(--muted);margin-top:4px}
+  .kpi.g .v{color:var(--green)} .kpi.a .v{color:var(--amber)} .kpi.r .v{color:var(--red)}
+
+  /* barras */
+  .bars{margin:18px 0;display:grid;gap:9px}
+  .bar{display:grid;grid-template-columns:190px 1fr 62px;gap:12px;align-items:center;font-size:13.5px}
+  .bar .tr{height:16px;background:#e9e3d2;border-radius:4px;overflow:hidden}
+  .bar .fill{height:100%;background:linear-gradient(90deg,var(--green-2),var(--lime));border-radius:4px}
+  .bar .val{text-align:right;font-variant-numeric:tabular-nums;color:#33443c}
+
+  /* cards de bug */
+  .bugs{display:grid;gap:12px;margin-top:22px}
+  details.bug{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--red);border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
+  details.bug[open]{background:#fffef9}
+  details.bug summary{cursor:pointer;list-style:none;padding:13px 16px;display:flex;gap:12px;align-items:baseline;font-weight:600}
+  details.bug summary::-webkit-details-marker{display:none}
+  details.bug summary .n{font-size:12px;color:var(--red);font-weight:750;min-width:22px}
+  details.bug summary .tag{margin-left:auto;font-size:11.5px;font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 8px;white-space:nowrap}
+  details.bug .body{padding:0 16px 16px 50px;font-size:14.5px}
+  details.bug .body p{margin:.5em 0}
+  .lbl{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:650}
+
+  /* accordions neutros */
+  details.acc{background:var(--card);border:1px solid var(--line);border-radius:10px;margin:10px 0;box-shadow:var(--shadow)}
+  details.acc>summary{cursor:pointer;list-style:none;padding:12px 16px;font-weight:600;font-size:14.5px;display:flex;align-items:center;gap:10px}
+  details.acc>summary::-webkit-details-marker{display:none}
+  details.acc>summary::before{content:"+";color:var(--green);font-weight:800;font-size:17px;width:14px}
+  details.acc[open]>summary::before{content:"–"}
+  details.acc .body{padding:0 16px 15px 40px;font-size:14.5px}
+
+  /* gráficos */
+  .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin:22px 0}
+  .chart{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 14px 10px;box-shadow:var(--shadow)}
+  .chart h4{margin:0 0 2px;font-size:14px}
+  .chart .cap{font-size:12.5px;color:var(--muted);margin-bottom:6px}
+  .chart svg{width:100%;height:auto;display:block}
+  .chart .x{display:flex;justify-content:space-between;font-size:10.5px;color:#9aa89f;margin-top:2px}
+
+  .callout{background:#fdf6e3;border:1px solid #e6d3a3;border-radius:10px;padding:14px 16px;margin:18px 0;font-size:14.5px}
+  .callout b{color:#8a5a12}
+  .callout.green{background:#eef4e9;border-color:#c9dcb9}
+  .callout.green b{color:var(--green)}
+
+  ul.tight{margin:.4em 0 .4em 1.1em;padding:0}
+  ul.tight li{margin:.32em 0}
+
+  footer{padding:44px 0 70px}
+  .licoes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:18px}
+  .licao{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow)}
+  .licao .n{font-size:28px;font-weight:800;color:#dcd5c0;line-height:1}
+  .licao p{margin:.3em 0 0;font-size:14.5px}
+  .src{font-size:12.5px;color:var(--muted);margin-top:6px}
+  /* faixa de resultado */
+  .faixa{margin-top:30px;background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:18px 20px;box-shadow:var(--shadow)}
+  .faixa h3{margin:0 0 2px;font-size:15px;letter-spacing:.02em;text-transform:uppercase;color:var(--green)}
+  .faixa-grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:14px;margin:14px 0 10px}
+  .faixa-grade .v{font-size:clamp(20px,2.4vw,26px);font-weight:750;letter-spacing:-.02em;line-height:1.1}
+  .faixa-grade .l{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.3}
+  .faixa p{margin:.4em 0 0;font-size:14px;color:#33443c}
+  .modelo{display:inline-block;font-family:ui-monospace,Consolas,monospace;font-size:11.5px;
+    background:#1d2b25;color:#b6d98a;border-radius:5px;padding:1px 7px;margin:0 2px}
+  @media (max-width:640px){
+    .bar{grid-template-columns:120px 1fr 54px}
+    details.bug .body{padding-left:16px}
+    .wrap{padding:0 18px}
+  }
+</style>
+</head>
+<body>
+
+<header class="capa">
+  <div class="wrap">
+    <div class="eyebrow">Estágio docência · encontro individual · 23 out 2026</div>
+    <h1>Uma pergunta, dois prompts<br>e seis erros silenciosos</h1>
+    <p class="sub">Como o pedido de uma aluna da CIAMB virou um pipeline testado no Earth Engine — e o que a auditoria mudou nos números.</p>
+    <div class="chips">
+      <div class="chip"><b>2.612</b> polígonos de ASV publicados</div>
+      <div class="chip"><b>636</b> baixadas</div>
+      <div class="chip"><b>30</b> analisadas</div>
+      <div class="chip"><b>6</b> erros encontrados</div>
+      <div class="chip"><b>0</b> imagens baixadas</div>
+    </div>
+
+    <div class="faixa">
+      <h3>Resultado obtido</h3>
+      <div class="faixa-grade">
+        <div><div class="v">60,5%</div><div class="l">da vegetação nativa autorizada foi suprimida (471,4 de 778,7 ha)</div></div>
+        <div><div class="v">25/30</div><div class="l">ASVs com supressão detectada após a licença</div></div>
+        <div><div class="v">fev–mar/2020</div><div class="l">data do evento no processo 14962016 (série mensal)</div></div>
+        <div><div class="v">86,9%</div><div class="l">da área autorizada está fora dos remanescentes do Atlas</div></div>
+        <div><div class="v">86,7%</div><div class="l">acerto do cruzamento com o Atlas (amostragem de pontos)</div></div>
+        <div><div class="v">−0,246</div><div class="l">ΔNDVI dos suprimidos — controle independente, contra +0,015 dos demais</div></div>
+      </div>
+      <p><b>Em uma frase:</b> sobre 30 autorizações reais da região de Meia Ponte (1.152,4 ha), 471,4 ha de vegetação nativa foram suprimidas depois da licença — a datação mensal resolve o “quando” e um grupo de controle sem MapBiomas (−0,246 contra +0,015) sustenta o “se”. O item 1 do pré-projeto só ficou *parcialmente* resolvido: o Atlas não tem download vetorial e precisou ser consultado por ponto.</p>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="wrap">
+    <a href="#pedido">1 · O pedido</a>
+    <a href="#processo">2 · Como foi gerado</a>
+    <a href="#bugs">3 · A auditoria</a>
+    <a href="#resultados">4 · Resultados</a>
+    <a href="#aderencia">5 · Aderência ao pedido</a>
+    <a href="#limites">6 · O que a IA não fez</a>
+    <a href="#custo">7 · Custo</a>
+    <a href="#registro">8 · Registro da sessão</a>
+  </div>
+</nav>
+
+<!-- 1 ------------------------------------------------------------------ -->
+<section id="pedido">
+  <div class="wrap">
+    <div class="kicker"><span class="num">1</span><span class="eyebrow">O pedido</span></div>
+    <h2>Ela pediu uma ferramenta. O problema era outro.</h2>
+
+    <div class="quote">
+      “Quero respostas concretas e testadas (mas me avise se for gastar recurso computacional meu).”
+      <span>— o pedido que definiu o formato de tudo o que vem a seguir</span>
+    </div>
+
+    <p class="lead">Os quatro objetivos do pré-projeto, traduzidos para o que custa tempo de verdade:</p>
+
+    <table>
+      <thead><tr><th>Objetivo declarado</th><th>O que é, tecnicamente</th><th>Onde está o custo</th></tr></thead>
+      <tbody>
+        <tr><td>1. Cruzar Atlas × bases de licenciamento</td><td>Interseção espacial entre duas classificações</td><td class="up">Obter o vetor do Atlas — é o gargalo</td></tr>
+        <tr><td>2. Área e taxa de avanço por classe</td><td>Estatística zonal por ano</td><td class="down">Sai de graça, depois do item 1</td></tr>
+        <tr><td>3. Verificar se foi suprimido e quando</td><td>Série temporal anual + confirmação em imagem</td><td class="down">Resolvido <b>sem baixar imagem</b></td></tr>
+        <tr><td>4. Proporcionalidade por formação</td><td>Agrupamento da tabela do item 2</td><td class="down">Mesma tabela</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <b>A inversão.</b> O item que ela achava mais difícil (3) é o mais barato. O que ela achava trivial (1) é o gargalo — e não é computacional, é institucional: o Atlas está publicado só como <i>imagem</i>.
+    </div>
+
+    <p class="small muted" style="margin-top:-6px">Cuidado com a linha 2: <b>“taxa de avanço do licenciamento” ≠ “taxa de supressão”</b>. A primeira mede quanto do remanescente já foi licenciado; a segunda mede quanto da área licenciada foi de fato suprimida. São o item 2 e o item 3 — e no primeiro relatório eu misturei as duas. Ver a seção 5.</p>
+  </div>
+</section>
+
+<!-- 2 ------------------------------------------------------------------ -->
+<section id="processo">
+  <div class="wrap">
+    <div class="kicker"><span class="num">2</span><span class="eyebrow">Como foi gerado</span></div>
+    <h2>Sete passos, nenhum deles “gerar código”</h2>
+
+    <div class="flow">
+      <span class="step">Pedido</span><span class="arr">→</span>
+      <span class="step">Achar as fontes</span><span class="arr">→</span>
+      <span class="step hot">Provar que o dado existe</span><span class="arr">→</span>
+      <span class="step">Baixar</span><span class="arr">→</span>
+      <span class="step">Achar a série temporal</span><span class="arr">→</span>
+      <span class="step">Rodar o detector</span><span class="arr">→</span>
+      <span class="step hot">Auditar</span>
+    </div>
+
+    <table>
+      <thead><tr><th class="num">#</th><th>O que aconteceu</th><th>O que voltou</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td>Li o pedido e procurei o gargalo</td><td>“baixar imagem” era sintoma; o polígono é que faltava</td></tr>
+        <tr><td class="num">2</td><td>Busca na web pelo Atlas</td><td>A busca devolveu <b>zero</b> resultados; troquei para leitura direta da página oficial</td></tr>
+        <tr><td class="num">3</td><td>Abri o catálogo do SIGA/GO</td><td>~110 camadas; achei <code>vw_asv_ipe_sga_publico</code></td></tr>
+        <tr><td class="num">4</td><td>Descrevi os campos e baixei o recorte</td><td>13 campos, com data, processo e atividade; <b>636 feições / 13,6 MB</b></td></tr>
+        <tr><td class="num">5</td><td>Procurei o MapBiomas no Earth Engine</td><td>Testei <b>11 caminhos de asset</b>; 9 não existiam. O certo era <code>collection11/…_coverage_v3</code>: 41 bandas, 1985–2025</td></tr>
+        <tr><td class="num">6</td><td>Escrevi o detector de conversão</td><td>39 bandas de transição, <b>uma chamada por ano</b> — não por polígono</td></tr>
+        <tr><td class="num">7</td><td>Rodei e conferi</td><td>Deu tabela. Parecia certo. <b>Não estava.</b></td></tr>
+      </tbody>
+    </table>
+
+    <details class="acc">
+      <summary>Os prompts, um por um (dois do usuário, dezenas de ferramenta)</summary>
+      <div class="body">
+        <p><span class="lbl">Prompt 1 — o pedido</span></p>
+        <p class="small" style="border-left:2px solid #ddd7c7;padding-left:12px">
+          “Estou fazendo estágio docência numa matéria de uso da IA… os alunos têm direito a um encontro individual… [contexto da aluna] me inscrevi no processo seletivo de mestrado da CIAMB e gostaria de alguma ferramenta para otimizar a obtenção dos dados propostos no pré-projeto… [quatro objetivos]… Resultado esperado: menos tempo na busca das imagens, ou classificação dos dados. <b>Como acha que a IA pode ajudá-la?</b> … Quero respostas concretas e testadas (mas me avise se for gastar recurso computacional meu).”
+        </p>
+        <p class="small muted">Nada de pedido de código, formato ou ferramenta. A única restrição era não gastar recurso sem avisar.</p>
+
+        <p><span class="lbl">Prompt 2 — a auditoria</span></p>
+        <p class="small"><i>“Pense e repense no que você propôs. Procure por problemas e bugs. Refinada a ideia, elabore uma apresentação de como isso foi gerado, quais prompts foram dados aqui e apresente os resultados.”</i></p>
+
+        <p><span class="lbl">O que a IA fez entre um e outro</span></p>
+        <table>
+          <thead><tr><th>Chamada de ferramenta</th><th>Retorno</th><th>Decisão que mudou</th></tr></thead>
+          <tbody>
+            <tr><td>busca web “Atlas Goiás remanescentes”</td><td>0 resultados</td><td>trocar de ferramenta em vez de insistir</td></tr>
+            <tr><td><code>WFS … GetCapabilities</code></td><td>lista de camadas</td><td>descobrir a camada de ASV</td></tr>
+            <tr><td><code>DescribeFeatureType</code></td><td>13 campos com data e processo</td><td>permitir filtro por ano</td></tr>
+            <tr><td><code>GetFeature&nbsp;bbox=…</code></td><td>636 polígonos</td><td>base do teste</td></tr>
+            <tr><td><code>ee.Image(asset).bandNames()</code></td><td>40 bandas (C10) → 41 (C11)</td><td>série temporal pronta</td></tr>
+            <tr><td><code>reduceRegions(…)</code></td><td>tabela por polígono</td><td>resultado</td></tr>
+          </tbody>
+        </table>
+        <p class="small muted">Nenhuma dessas chamadas foi “pedida” no prompt. Todas foram tentativa e erro guiados pelo que voltava.</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- 3 ------------------------------------------------------------------ -->
+<section id="bugs">
+  <div class="wrap">
+    <div class="kicker"><span class="num">3</span><span class="eyebrow">A auditoria</span></div>
+    <h2>Seis erros que não deram erro</h2>
+
+    <p class="lead">A primeira versão rodou limpa e produziu uma tabela de 30 linhas. Depois do prompt 2, achei seis coisas erradas. Nenhuma delas quebrou o programa.</p>
+
+    <table>
+      <thead><tr><th>Métrica</th><th class="num">1ª versão (C10)</th><th class="num">Corrigido (C10)</th><th class="num">Erro</th></tr></thead>
+      <tbody>
+        <tr><td>Área autorizada</td><td class="num">1.356,7 ha</td><td class="num">1.152,4 ha</td><td class="num up">+17,7%</td></tr>
+        <tr><td>Vegetação nativa antes da licença</td><td class="num">852,7 ha</td><td class="num">758,8 ha</td><td class="num up">+12,4%</td></tr>
+        <tr><td>Área efetivamente suprimida</td><td class="num">506,0 ha</td><td class="num">405,9 ha</td><td class="num up">+24,7%</td></tr>
+        <tr><td>Taxa de supressão</td><td class="num">59,3%</td><td class="num">53,5%</td><td class="num up">+5,8 p.p.</td></tr>
+        <tr><td>ΔNDVI mediano</td><td class="num">−0,177</td><td class="num">−0,205</td><td class="num">subestimado</td></tr>
+        <tr><td>Defasagem licença → supressão</td><td class="num">0 ano</td><td class="num">1 ano</td><td class="num">artefato</td></tr>
+      </tbody>
+    </table>
+
+    <p class="small muted" style="margin-top:-4px">As duas colunas usam a <b>Coleção 10</b>, para isolar o efeito dos bugs de código. A amostra também mudou entre elas (o dedupe e o sorteio alteraram quais 30 polígonos entraram): a tabela mostra a ordem de grandeza do erro, não isola a causa de cada linha. A troca de coleção está no sétimo item, mais abaixo.</p>
+
+    <div class="bugs">
+
+      <details class="bug">
+        <summary><span class="n">01</span> A tabela saiu zerada <span class="tag">chave errada</span></summary>
+        <div class="body">
+          <p><span class="lbl">Sintoma</span><br>30 linhas, todas com área 0. Nenhuma exceção.</p>
+          <p><span class="lbl">Causa</span><br>O <code>reduceRegions</code> nomeia a saída pelo redutor, não pela banda. O código procurava um campo que não existe.</p>
+          <pre><code><span class="del">props["ano_conversao_min"]   # nunca existiu</span>
+<span class="ins">props["min"]                 # nome real da saída</span></code></pre>
+          <p><span class="lbl">Lição</span><br>Conferir um valor à mão teria pegado em dez segundos. Zero não é resposta: é sintoma.</p>
+        </div>
+      </details>
+
+      <details class="bug">
+        <summary><span class="n">02</span> A área caiu pela metade <span class="tag">unidade de SRID</span></summary>
+        <div class="body">
+          <p><span class="lbl">Sintoma</span><br>O mesmo polígono tinha 191,8 ha no geopandas e 91,8 ha no Earth Engine.</p>
+          <p><span class="lbl">Causa</span><br>Simplifiquei a geometria com tolerância <code>10</code> achando que era metro. O dado já estava em graus: 10 graus é um continente.</p>
+          <pre><code><span class="del">geom.simplify(10)</span>                      # 10 graus
+<span class="ins">geom.simplify(tolerancia_m / 111_320)</span>  # 10 metros</code></pre>
+          <p><span class="lbl">Lição</span><br>Metade da área sumiu sem aviso. Unidade não é detalhe — é a diferença entre um resultado e um absurdo plausível.</p>
+        </div>
+      </details>
+
+      <details class="bug">
+        <summary><span class="n">03</span> Suprimi mais vegetação do que existia <span class="tag">linha de base</span></summary>
+        <div class="body">
+          <p><span class="lbl">Sintoma</span><br>Num polígono com 25,3 ha de vegetação, o código contou 67,8 ha suprimidos.</p>
+          <p><span class="lbl">Causa</span><br>A linha de base era o ano da licença, e as conversões eram contadas a partir do mesmo ano. O denominador já vinha depois do evento.</p>
+          <pre><code><span class="del">base = classe(ano_licenca)</span>              # já contaminada
+<span class="ins">base = classe(ano_licenca - 1)</span>          # antes do evento</code></pre>
+          <p><span class="lbl">Lição</span><br>Sem linha de base explícita, a taxa pode passar de 100% e ninguém percebe.</p>
+        </div>
+      </details>
+
+      <details class="bug">
+        <summary><span class="n">04</span> O dado público veio duplicado <span class="tag">qualidade da fonte</span></summary>
+        <div class="body">
+          <p><span class="lbl">Sintoma</span><br>636 polígonos. Mas 29 eram a mesma geometria repetida, uma por atividade do processo.</p>
+          <p><span class="lbl">Efeito</span><br>+7% de área: 9.289 ha viraram 8.623 ha depois do dedupe.</p>
+          <pre><code>df = df.drop_duplicates(subset=["numero_processo", "area_ha"])</code></pre>
+          <p><span class="lbl">Lição</span><br>WFS não é banco normalizado. Serviço público também vem sujo — e o erro é silencioso, porque a soma “funciona”.</p>
+        </div>
+      </details>
+
+      <details class="bug">
+        <summary><span class="n">05</span> A janela do NDVI comia o evento <span class="tag">desenho temporal</span></summary>
+        <div class="body">
+          <p><span class="lbl">Sintoma</span><br>Defasagem mediana de 0 ano entre licença e supressão. Bom demais para ser verdade.</p>
+          <p><span class="lbl">Causa</span><br>O “antes” era a média de <code>ano−1</code> e <code>ano</code> — incluindo o próprio ano da supressão.</p>
+          <pre><code><span class="del">antes = media([ano-1, ano])</span>
+<span class="ins">antes = media([ano-2, ano-1])</span></code></pre>
+          <p><span class="lbl">Efeito</span><br>ΔNDVI foi de −0,177 para −0,205 e a defasagem de 0 para 1 ano.</p>
+          <p><span class="lbl">Lição</span><br>Se a janela inclui o evento, o contraste desaparece — e o resultado fica “mais limpo” justamente por estar errado.</p>
+        </div>
+      </details>
+
+      <details class="bug">
+        <summary><span class="n">06</span> A amostra mandou no resultado <span class="tag">desenho amostral</span></summary>
+        <div class="body">
+          <p><span class="lbl">Sintoma</span><br>Duas rodadas, dois rankings opostos:</p>
+          <ul class="tight">
+            <li>1ª amostra: <b>Savânica 64,6%</b> &gt; Florestal 59,8%</li>
+            <li>2ª amostra: <b>Florestal 54,8%</b> &gt; Savânica 52,7%</li>
+          </ul>
+          <p><span class="lbl">Causa</span><br>n = 30, sorteado sem estratificação por tamanho e classe. Com 30 polígonos, um único imóvel grande muda a taxa da classe inteira.</p>
+          <p><span class="lbl">Lição</span><br>Isto é prova de conceito, não resultado. O desenho amostral é decisão dela — e é o que a banca vai cobrar.</p>
+        </div>
+      </details>
+
+    </div>
+
+    <div class="callout">
+      <b>O padrão.</b> Todos os seis produziram saída válida. O erro não aparece no console: aparece quando você compara o número com outra fonte, ou com o bom senso.
+    </div>
+
+    <div class="callout" style="background:#fff7e8;border-color:#e0c48a">
+      <b>O sétimo problema veio do professor, não da IA.</b> A pergunta foi: <i>“por que Coleção 10 e não 11?”</i> Não havia razão técnica. Eu testei 11 caminhos de asset e todos falharam porque usei o padrão antigo (<code>…_integration_</code>); na Coleção 11 o nome virou <code>…_coverage_</code>. O <code>listAssets</code> mostrava a pasta <code>collection11</code> desde o começo — com <code>coverage_v3</code>, 41 bandas, <b>1985–2025</b>.
+      <table style="margin-top:12px">
+        <thead><tr><th>Mesmos 30 polígonos</th><th class="num">Coleção 10</th><th class="num">Coleção 11</th></tr></thead>
+        <tbody>
+          <tr><td>Vegetação nativa antes da licença</td><td class="num">758,7 ha</td><td class="num">778,7 ha</td></tr>
+          <tr><td>Suprimida depois da licença</td><td class="num">405,9 ha</td><td class="num">471,4 ha</td></tr>
+          <tr><td>Taxa de supressão</td><td class="num">53,5%</td><td class="num">60,5%</td></tr>
+          <tr><td>Polígonos com supressão</td><td class="num">24/30</td><td class="num">25/30</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-bottom:0"><b>Nenhum hectare veio do ano novo.</b> Zero conversões foram datadas de 2025 — os 65 ha de diferença são <i>revisão do passado</i>: a Coleção 11 reescreve anos anteriores. Consequência prática: fixe a coleção e a versão <b>antes</b> de começar, escreva no método e nunca misture. Trocar de coleção no meio do projeto muda o resultado tanto quanto um bug.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4 ------------------------------------------------------------------ -->
+<section id="resultados">
+  <div class="wrap">
+    <div class="kicker"><span class="num">4</span><span class="eyebrow">Resultados</span></div>
+    <h2>O que sobrou depois da auditoria</h2>
+    <p class="small muted" style="margin-top:-6px">Rodada final: MapBiomas <b>Coleção 11</b> (coverage_v3, 1985–2025).</p>
+
+    <div class="kpis">
+      <div class="kpi g"><div class="v">1.152,4</div><div class="l">ha autorizados (30 polígonos)</div></div>
+      <div class="kpi"><div class="v">778,7</div><div class="l">ha de vegetação nativa antes da licença</div></div>
+      <div class="kpi r"><div class="v">471,4</div><div class="l">ha efetivamente suprimidos</div></div>
+      <div class="kpi a"><div class="v">60,5%</div><div class="l">taxa de supressão</div></div>
+      <div class="kpi"><div class="v">25/30</div><div class="l">polígonos com supressão detectada</div></div>
+      <div class="kpi g"><div class="v">−0,212</div><div class="l">ΔNDVI mediano, antes e depois da conversão</div></div>
+    </div>
+
+    <h3>Taxa de supressão por formação dominante</h3>
+    <div class="bars">
+      <div class="bar"><span>Formação Florestal <span class="muted">(n=17)</span></span><div class="tr"><div class="fill" style="width:63.8%"></div></div><span class="val">63,8%</span></div>
+      <div class="bar"><span>Formação Savânica <span class="muted">(n=6)</span></span><div class="tr"><div class="fill" style="width:59.8%"></div></div><span class="val">59,8%</span></div>
+      <div class="bar"><span>Pastagem <span class="muted">(n=5)</span></span><div class="tr"><div class="fill" style="width:28.6%"></div></div><span class="val">28,6%</span></div>
+      <div class="bar"><span>Mosaico de Usos <span class="muted">(n=2)</span></span><div class="tr"><div class="fill" style="width:73.1%"></div></div><span class="val">73,1%</span></div>
+    </div>
+    <p class="small muted">Barras verdes, mas leia com desconfiança: veja o bug 06. Com n=30, esta ordem já se inverteu uma vez.</p>
+
+    <h3>Três casos reais, mesma região e mesma janela</h3>
+    <div class="charts">
+
+      <div class="chart">
+        <h4>Processo 162042013</h4>
+        <div class="cap">0% suprimido · licença 2021</div>
+        <svg viewBox="0 0 320 96" role="img" aria-label="NDVI estável entre 2017 e 2025">
+          <line x1="10" y1="86" x2="310" y2="86" stroke="#e3ddcb"/>
+          <polyline fill="none" stroke="#8fb339" stroke-width="2.5" stroke-linejoin="round"
+            points="10.0,31.9 47.5,22.4 85.0,26.1 122.5,28.0 160.0,27.1 197.5,29.0 235.0,28.0 272.5,27.1 310.0,25.2"/>
+          <circle cx="197.5" cy="29.0" r="3.2" fill="#2c5a43"/>
+        </svg>
+        <div class="x"><span>2017</span><span>2021</span><span>2025</span></div>
+        <p class="small">Linha reta. <b>O detector não inventa supressão.</b></p>
+      </div>
+
+      <div class="chart">
+        <h4>Processo 14962016</h4>
+        <div class="cap">78,1% suprimido · licença 2019</div>
+        <svg viewBox="0 0 320 96" role="img" aria-label="NDVI cai em 2020 e não volta">
+          <line x1="10" y1="86" x2="310" y2="86" stroke="#e3ddcb"/>
+          <polyline fill="none" stroke="#a33a2a" stroke-width="2.5" stroke-linejoin="round"
+            points="10.0,29.0 47.5,19.5 85.0,24.2 122.5,61.3 160.0,56.5 197.5,36.6 235.0,36.6 272.5,34.7 310.0,44.2"/>
+          <circle cx="122.5" cy="61.3" r="3.2" fill="#a33a2a"/>
+        </svg>
+        <div class="x"><span>2017</span><span>2020</span><span>2025</span></div>
+        <p class="small">Queda entre 2019 e 2020, sem recuperação. <b>É o padrão esperado.</b></p>
+      </div>
+
+      <div class="chart">
+        <h4>Processo 97792016</h4>
+        <div class="cap">98,0% suprimido · licença 2020</div>
+        <svg viewBox="0 0 320 96" role="img" aria-label="NDVI cai em 2021 e recupera">
+          <line x1="10" y1="86" x2="310" y2="86" stroke="#e3ddcb"/>
+          <polyline fill="none" stroke="#c07a17" stroke-width="2.5" stroke-linejoin="round"
+            points="10.0,55.6 47.5,45.1 85.0,45.1 122.5,49.9 160.0,80.3 197.5,55.6 235.0,45.1 272.5,73.6 310.0,67.0"/>
+          <circle cx="160.0" cy="80.3" r="3.2" fill="#c07a17"/>
+        </svg>
+        <div class="x"><span>2017</span><span>2021</span><span>2025</span></div>
+        <p class="small">Cai e recupera: pastagem que rebrota. <b>NDVI mede cobertura, não uso.</b></p>
+      </div>
+
+    </div>
+
+    <div class="callout green">
+      <b>O teste que dá credibilidade.</b> Comparei o ΔNDVI de dois anos (independente do MapBiomas) entre os polígonos classificados como suprimidos e os não suprimidos:
+      <b>−0,246</b> (n=25) contra <b>+0,015</b> (n=5). Duas fontes diferentes concordando é o que separa um resultado de uma coincidência.
+    </div>
+
+    <details class="acc">
+      <summary>Resultado por ano de licença — e por que 2024 não significa nada</summary>
+      <div class="body">
+        <table>
+          <thead><tr><th>Ano da licença</th><th class="num">n</th><th class="num">Área autorizada</th><th class="num">Nativa antes</th><th class="num">Suprimida</th><th class="num">Taxa</th></tr></thead>
+          <tbody>
+            <tr><td>2018</td><td class="num">3</td><td class="num">132,3 ha</td><td class="num">22,6 ha</td><td class="num">4,8 ha</td><td class="num">21,3%</td></tr>
+            <tr><td>2019</td><td class="num">2</td><td class="num">219,9 ha</td><td class="num">168,6 ha</td><td class="num">80,8 ha</td><td class="num">47,9%</td></tr>
+            <tr><td>2020</td><td class="num">4</td><td class="num">291,8 ha</td><td class="num">199,7 ha</td><td class="num">159,0 ha</td><td class="num">79,6%</td></tr>
+            <tr><td>2021</td><td class="num">2</td><td class="num">84,6 ha</td><td class="num">75,3 ha</td><td class="num">14,2 ha</td><td class="num">18,8%</td></tr>
+            <tr><td>2022</td><td class="num">5</td><td class="num">172,7 ha</td><td class="num">150,8 ha</td><td class="num">117,9 ha</td><td class="num">78,2%</td></tr>
+            <tr><td>2023</td><td class="num">7</td><td class="num">140,8 ha</td><td class="num">101,6 ha</td><td class="num">77,8 ha</td><td class="num">76,5%</td></tr>
+            <tr><td>2024</td><td class="num">7</td><td class="num">110,3 ha</td><td class="num">60,0 ha</td><td class="num">16,9 ha</td><td class="num">28,2%</td></tr>
+          </tbody>
+        </table>
+        <p>A taxa de 2024 era <b>4,0%</b> na Coleção 10 e é <b>28,2%</b> na 11 — e nenhum hectare veio de 2025. A diferença é revisão do passado. Ou seja: aquela queda não era censura do dado, era a coleção. A censura existe, mas para licenças de 2025 e 2026.</p>
+        <p class="small muted">Com n entre 2 e 7 por ano, nenhuma dessas linhas tem significância. Elas mostram que o pipeline funciona; não mostram tendência.</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- 5 ------------------------------------------------------------------ -->
+<section id="aderencia">
+  <div class="wrap">
+    <div class="kicker"><span class="num">5</span><span class="eyebrow">Aderência ao pedido</span></div>
+    <h2>Relendo o pedido dela, linha por linha</h2>
+
+    <p class="lead">Sete requisitos, cinco atendidos, dois não. E duas confusões minhas que a releitura expôs.</p>
+
+    <table>
+      <thead><tr><th>Requisito (palavras dela)</th><th>O que existe</th><th>Veredito</th></tr></thead>
+      <tbody>
+        <tr><td>“alguma ferramenta”</td><td>4 scripts de linha de comando, testados</td><td>🟡 parcial — é pipeline, não ferramenta</td></tr>
+        <tr><td>“úteis no meu dia a dia no trabalho”</td><td>nada: os scripts servem ao pré-projeto, não à rotina dela</td><td>🔴 não atendido</td></tr>
+        <tr><td>1. Cruzar Atlas × licenciamento e supressão</td><td>agora sim, mas só por amostragem de pontos no WMS (86,7% de acerto)</td><td>🟡 entregue com viés declarado</td></tr>
+        <tr><td>2. Área e taxa de avanço por classe do Atlas</td><td>taxa por classe existe, denominador aproximado</td><td>🟡 parcial</td></tr>
+        <tr><td>3. Landsat/Sentinel-2 + MapBiomas: suprimiu? quando?</td><td>sim — e agora com data mensal e as imagens</td><td>🟢 atendido</td></tr>
+        <tr><td>4. Proporcionalidade por formação</td><td>saí da mesma tabela, com n pequeno</td><td>🟡 parcial</td></tr>
+        <tr><td>“concretas e testadas” + aviso de custo</td><td>executado, com contagem de chamadas e de bytes</td><td>🟢 atendido</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout" style="background:#fdf1ef;border-color:#e0b0a8">
+      <b>Duas confusões que a releitura expôs.</b><br>
+      <b>1.</b> Eu usei MapBiomas no lugar do Atlas e apresentei isso como se o item 1 estivesse resolvido. Não estava: o cruzamento com o Atlas só existiu agora, e ainda é amostral.<br>
+      <b>2.</b> Eu reportei <i>taxa de supressão</i> como se fosse <i>taxa de avanço do licenciamento</i>. Avanço = área licenciada ÷ remanescente. Supressão = área suprimida ÷ área licenciada. São os itens 2 e 3, e eu os tratei como um só.
+    </div>
+
+    <h3>O que mudou nesta rodada</h3>
+
+    <div class="charts">
+      <div class="chart" style="grid-column:1/-1">
+        <h4>Item 3, com data no mês</h4>
+        <div class="cap">Processo 14962016 — licença de 2019, 112 ha. NDVI mensal do Sentinel-2 e anual do Landsat.</div>
+        <img src="serie_607.png" alt="Série mensal de NDVI do processo 14962016 com queda em 2020" style="width:100%;border-radius:8px;margin-top:4px">
+        <p class="small" style="margin-top:8px">Floresta densa até 2019 (NDVI 0,76–0,81). Queda entre <b>janeiro e março de 2020</b> (0,79 → 0,35) e nível baixo até 2021. O MapBiomas anual só diria “2020” — o mensal diz o mês. Em 2022 o NDVI sobe de novo: <b>vegetação que rebrota não é a mesma coisa que uso do solo que não voltou</b>.</p>
+      </div>
+    </div>
+
+    <div class="charts">
+      <div class="chart">
+        <h4>Caso negativo: já estava degradado</h4>
+        <div class="cap">Processo 42452017 — licença de 2017, 254 ha</div>
+        <img src="serie_612.png" alt="Série do processo 42452017 sem queda de nível" style="width:100%;border-radius:8px;margin-top:4px">
+        <p class="small" style="margin-top:8px">Landsat 2013–2017 plano em 0,30–0,34 e NDVI mensal sem queda: a área já era pastagem degradada <b>antes</b> da licença. Aqui é o Landsat que segura a linha do tempo — o Sentinel-2 só começa em março de 2017.</p>
+      </div>
+      <div class="chart">
+        <h4>As imagens que ela queria</h4>
+        <div class="cap">Mesmo processo, Sentinel-2 RGB com o limite da ASV</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <img src="serie_607_2019.png" alt="Sentinel-2 2019" style="width:100%;border-radius:6px">
+          <img src="serie_607_2020.png" alt="Sentinel-2 2020" style="width:100%;border-radius:6px">
+        </div>
+        <p class="small" style="margin-top:6px">2019 (antes) e 2020 (depois). O contorno vermelho é a ASV. Sai direto do Earth Engine, sem baixar nada: <code>getThumbURL</code>.</p>
+      </div>
+    </div>
+
+    <details class="acc">
+      <summary>O Atlas, examinado de perto (o que mudou na conclusão da seção 6)</summary>
+      <div class="body">
+        <ul class="tight">
+          <li><b>WFS desligado</b> no servidor: <code>the service parameter "wfs" is invalid</code>. Não há download vetorial por nenhuma via (nem <code>/wfs</code>, nem <code>/geoserver</code>, nem <code>/ows</code>).</li>
+          <li><b>Mas o WMS é vetorial</b>, e o <code>GetFeatureInfo</code> devolve o fragmento: <code>CLASSES</code> (FLORESTAL SECA, SAVANA ÚMIDA, CAMPO ÚMIDO…), <code>AREA_KM2</code>, município, região hidrográfica. É dado de verdade, consultável.</li>
+          <li><b>Só por ponto</b>, e com 13% de erro: em 60 pontos checados contra render local em alta resolução, a concordância foi 86,7% (7 fragmentos perdidos, 1 inventado). Erro de borda e de resolução.</li>
+          <li><b>O render é gradiente dependente de escala</b>: 21.582 cores distintas num mosaico de 4 milhões de pixels, e a mesma mancha sai com cor diferente em 200 px e em 800 px. Não há paleta discreta — <b>estatística zonal por classe não sai da imagem</b>. E a legenda (<code>GetLegendGraphic</code>) responde 500.</li>
+          <li><b>Cobertura:</b> só as bacias do Meia Ponte e dos Bois.</li>
+        </ul>
+        <p><b>Cruzamento por amostragem (30 ASVs, 425 pontos no WMS):</b> 86,9% da área autorizada está fora dos remanescentes mapeados; onde há remanescente, <b>FLORESTAL SECA 118,7 ha (9,8%)</b> e SAVANA SECA 37,4 ha (3,1%). Parte desse “fora” é fora das bacias mapeadas — o viés está declarado, não escondido.</p>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>Bugs novos desta rodada (todos silenciosos, de novo)</summary>
+      <div class="body">
+        <ul class="tight">
+          <li><b>Sazonal confundido com evento.</b> O “maior queda mensal” do NDVI era a queda de estação seca, não a supressão. A correção foi comparar a <i>média anual</i> de um ano com a do anterior — só aí o salto de 0,76 → 0,42 aparece.</li>
+          <li><b>Ano de conversão sem máscara.</b> O detector pegava a primeira conversão de <i>qualquer</i> época; para uma licença de 2019 o “ano” saía 1996, e as imagens pedidas eram de um ano sem Sentinel-2.</li>
+          <li><b>Janela do GetFeatureInfo.</b> Uma janela de 45 m erra na borda do fragmento; 600 m acerta, mas pode pegar o vizinho. Sem teste de concordância, o erro entra silencioso na área.</li>
+          <li><b>Cor como classe.</b> Assumi que a cor do render era a classe do Atlas. Não é: o estilo é gradiente. A tentativa de mapear cor→classe por k-means foi abandonada — e é a melhor prova de que a estatística por classe exige o shapefile.</li>
+          <li><b>2.012 pixels por mosaico.</b> Uma linha de base errada de 10× (fator de hectares) só apareceu porque a área do bbox foi conferida contra o valor em km².</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- 6 ------------------------------------------------------------------ -->
+<section id="limites">
+  <div class="wrap">
+    <div class="kicker"><span class="num">6</span><span class="eyebrow">Limites</span></div>
+    <h2>O que a IA não fez</h2>
+
+    <ul class="tight">
+      <li><b>Não obteve o vetor do Atlas.</b> Ele só existe como WMS — imagem renderizada.</li>
+      <li><b>Não desenhou a amostra.</b> Os 30 polígonos são conveniência, não estatística.</li>
+      <li><b>Não validou em campo.</b> Nem distinguiu “área requerida” de “área autorizada” — o campo <code>feicao</code> sugere que nem sempre são a mesma coisa.</li>
+      <li><b>Não sabe o que é supressão legal.</b> Uma área pode ter sido suprimida antes da licença, dentro do polígono requerido.</li>
+      <li><b>Não escolheu a coleção certa sozinha.</b> Ficou na 10 até alguém perguntar; a 11 muda 65 ha do resultado.</li>
+    </ul>
+
+    <details class="acc">
+      <summary>O teste do Atlas, em detalhe (o achado que muda o pré-projeto)</summary>
+      <div class="body">
+        <p>No SIGA, o WFS responde e lista ~110 camadas — nenhuma do Atlas. No servidor do Atlas, o WFS está <b>desligado</b> (o servidor responde <code>the service parameter "wfs" is invalid</code>); só existe WMS (camada <code>atlas_remanescentes</code>).</p>
+        <p>A camada é <b>vetorial</b>: o <code>GetFeatureInfo</code> devolve o fragmento com <code>CLASSES</code>, <code>AREA_KM2</code>, município e região hidrográfica. Dá para consultar por ponto — com 86,7% de acerto. Mas o render é <b>gradiente dependente de escala</b> (21.582 cores num mosaico de 4 milhões de pixels) e não há paleta discreta: <b>área por classe não sai da imagem</b>. O shapefile continua sendo a solução.</p>
+        <p><b>Consequência para o objetivo 1:</b> é preciso pedir o shapefile/GeoTIFF à SEMAD ou ao LAPIG. E o Atlas só concluiu as bacias do <b>Meia Ponte e dos Bois</b>; o resto do estado está em andamento. O universo do pré-projeto encolhe.</p>
+        <p><b>Consequência metodológica:</b> o próprio Atlas encontrou 42% mais vegetação que a Coleção 9 do MapBiomas. Sobrepor os dois sem uma matriz de confusão é comparar réguas diferentes.</p>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>Onde a IA realmente economizou tempo (e onde ela atrapalha)</summary>
+      <div class="body">
+        <table>
+          <thead><tr><th>Ajuda de verdade</th><th>Risco concreto</th></tr></thead>
+          <tbody>
+            <tr><td>Traduzir objetivo vago em pipeline testável</td><td>Inventar nome de camada, asset e campo — aconteceu 9 vezes com os assets</td></tr>
+            <tr><td>Depurar sintaxe do Earth Engine</td><td>“Consertar” um erro introduzindo outro, sem avisar</td></tr>
+            <tr><td>Gerar tabela, gráfico e texto metodológico</td><td>Produzir texto convincente sobre número errado</td></tr>
+            <tr><td>Encontrar e testar fontes de dados</td><td>Confundir “existe na web” com “existe na camada”</td></tr>
+          </tbody>
+        </table>
+        <p class="small muted">A regra que saiu deste encontro: <b>peça o código, mas confira o número</b>.</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- 6 ------------------------------------------------------------------ -->
+<section id="custo">
+  <div class="wrap">
+    <div class="kicker"><span class="num">7</span><span class="eyebrow">Custo e reprodutibilidade</span></div>
+    <h2>O que isso consumiu</h2>
+
+    <table>
+      <thead><tr><th>Recurso</th><th class="num">Quantidade</th><th>Observação</th></tr></thead>
+      <tbody>
+        <tr><td>Chamadas ao Earth Engine</td><td class="num">~20</td><td>uma por ano, não por polígono</td></tr>
+        <tr><td>Área processada</td><td class="num">11,5 km²</td><td>escala 30 m — desprezível na cota gratuita</td></tr>
+        <tr><td>Download do SIGA</td><td class="num">13,6 MB</td><td>636 polígonos em ~10 s</td></tr>
+        <tr><td>Imagens de satélite baixadas</td><td class="num">0</td><td>tudo agregado no servidor</td></tr>
+        <tr><td>Tempo de execução</td><td class="num">~30 s</td><td>30 polígonos, incluindo NDVI de 9 anos</td></tr>
+      </tbody>
+    </table>
+
+    <p class="small">O gargalo não foi processamento: foi descobrir que o dado existia, e depois descobrir que os números estavam errados.</p>
+
+    <details class="acc">
+      <summary>Arquivos e comandos para reproduzir</summary>
+      <div class="body">
+        <pre><code>estagio-ia/aluna-ciamb/
+├── README.md
+├── apresentacao.html
+├── dados/
+│   ├── asv_meiaponte.geojson     # 636 polígonos, 13,6 MB
+│   └── resultado_asv.csv         # 30 linhas, 20 colunas
+└── codigo/
+    ├── baixa_asv.py              # WFS do SIGA → GeoJSON
+    ├── analisa_asv.py            # MapBiomas + Sentinel-2 → CSV
+    └── resumo_resultados.py      # tabelas agregadas</code></pre>
+        <pre><code>python baixa_asv.py --bbox "-50.6,-18.3,-48.4,-16.0" --saida ../dados/asv_meiaponte.geojson
+python analisa_asv.py ../dados/asv_meiaponte.geojson --min-area 5 --max 30 --projeto SEU_PROJETO
+python resumo_resultados.py</code></pre>
+        <p class="small muted">Requer <code>earthengine-api</code>, <code>geopandas</code>, <code>shapely</code> e uma conta no Earth Engine. O código usa a API Python; o mesmo pipeline roda no Code Editor com ajuste de sintaxe.</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- 8 ------------------------------------------------------------------ -->
+<section id="registro">
+  <div class="wrap">
+    <div class="kicker"><span class="num">8</span><span class="eyebrow">Registro da sessão</span></div>
+    <h2>Como este material foi produzido</h2>
+
+    <p class="lead">Uma única sessão, cinco pedidos, <b>dois modelos diferentes</b>. A troca de modelo foi pedida no quarto turno e a revisão foi refeita do zero sob o modelo novo — é o registro que está aqui.</p>
+
+    <div class="callout" style="background:#eef2f6;border-color:#c3d2df">
+      <b>A troca de modelo, nas palavras do pedido (turno 4):</b> <i>“Acabei de mudar seu modelo do <span class="modelo">deepssek-v4.1-flash</span> pro <span class="modelo">Minimax-m3.1-flash</span>. Quero que agora você faça a revisão novamente, mas sendo esse novo modelo. E um ponto de atenção é entender se oq está sendo proposto atende exatamente o que foi colocado pela aluna.”</i>
+      <p style="margin-bottom:0">Os turnos 1–3 (execução, auditoria, troca de coleção) foram rodados sob <span class="modelo">deepseek-v4.1-flash</span>, conforme informado pelo solicitante. Os turnos 4–5 (revisão de aderência, Atlas, série mensal e este registro) foram rodados sob <span class="modelo">minimax-m3.1-flash</span> — identificador de execução visto pela própria sessão: <span class="modelo">ollama / minimax-m3.1-flash:cloud</span>.</p>
+    </div>
+
+    <table>
+      <thead><tr><th class="num">Turno</th><th>Pedido (trecho)</th><th>Modelo</th><th>O que saiu</th><th>Arquivo</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="num">1</td>
+          <td>“…respostas concretas e testadas (mas me avise se for gastar recurso computacional meu)”</td>
+          <td><span class="modelo">deepseek-v4.1-flash</span></td>
+          <td>Fontes mapeadas, ASV baixadas do WFS, detector MapBiomas+Sentinel-2, primeira execução, 6 bugs</td>
+          <td><code>codigo/</code><br><code>dados/resultado_asv.csv</code></td>
+        </tr>
+        <tr>
+          <td class="num">2</td>
+          <td>“Pense e repense no que você propos. Procure por problemas e bugs… Gere isso num formato HTML.”</td>
+          <td><span class="modelo">deepseek-v4.1-flash</span></td>
+          <td>Auditoria dos 6 bugs, re-execução, primeira versão da apresentação</td>
+          <td><code>apresentacao.html</code></td>
+        </tr>
+        <tr>
+          <td class="num">3</td>
+          <td>“E porque coleção 10 e não 11?”</td>
+          <td><span class="modelo">deepseek-v4.1-flash</span></td>
+          <td>Achado da Coleção 11 (asset renomeado), re-execução comparativa, +65 ha</td>
+          <td><code>dados/resultado_asv_c10.csv</code></td>
+        </tr>
+        <tr>
+          <td class="num">4</td>
+          <td>“…faça a revisão novamente, mas sendo esse novo modelo… entender se atende exatamente o que foi colocado pela aluna”</td>
+          <td><span class="modelo">minimax-m3.1-flash</span></td>
+          <td>Atlas examinado (WFS off, WMS vetorial, 86,7% de acerto), série mensal + Landsat + imagens, item 3 datado no mês, 5 bugs novos</td>
+          <td><code>serie_mensal.py</code><br><code>atlas_cruzamento.py</code><br><code>validar_atlas_alta.py</code></td>
+        </tr>
+        <tr>
+          <td class="num">5</td>
+          <td>“…registrar muito bem o que foi feito. Inclusive, registre que foi colocado outro modelo…”</td>
+          <td><span class="modelo">minimax-m3.1-flash</span></td>
+          <td>Este registro, faixa de resultado e mapa de arquivos</td>
+          <td>seção 8</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <details class="acc">
+      <summary>Os cinco prompts, na íntegra</summary>
+      <div class="body">
+        <p><span class="lbl">Turno 1 — deepseek-v4.1-flash</span></p>
+        <p class="small" style="border-left:2px solid #ddd7c7;padding-left:12px">
+          “Estou fazendo estágio docência numa matéria de uso da IA (pensando em IA generativa). Os alunos tem direito a um encontro individual e abaixo vai o que uma aluna me passou:
+          <b>Contexto do trabalho:</b> Eu me inscrevi no processo seletivo de mestrado da CIAMB e gostaria de alguma ferramenta para otimizar a obtenção dos dados propostos no pré projeto, que também podem ser uteis no meu dia a dia no trabalho.
+          <b>Tarefa e dificuldade:</b> Os objetivos do pré projeto são esses: 1. Cruzar os remanescentes do Atlas Goiás com as bases públicas de áreas licenciadas e autorizações de supressão. 2. Calcular, por classe do Atlas, a área e a taxa de avanço do licenciamento. 3. Verificar por séries temporais (Landsat/Sentinel-2 e MapBiomas) se as áreas autorizadas foram de fato suprimidas, e quando. 4. Estimar a proporcionalidade do avanço por formação vegetal e identificar as formações mais afetadas. Acredito que o principal processo para facilitar seria no item 3, para obter as imagens no Google Earth Engine.
+          <b>Resultado esperado:</b> Menos tempo na busca das imagens, ou classificação dos dados. Como acha que a IA pode ajudá-la? Ao ver dá pra automatizar bastante coisa. Quero respostas concretas e testadas (mas me avise se for gastar recurso computacional meu).”
+        </p>
+
+        <p><span class="lbl">Turno 2 — deepseek-v4.1-flash</span></p>
+        <p class="small" style="border-left:2px solid #ddd7c7;padding-left:12px">
+          “Pense e repense no que você propos. Procure por problemas e bugs. Refinada a ideia. Elabore uma apresentação de como isso foi gerado, quais prompts foram dados aqui e apresente os resultados. Tente ser o mais ilustrativo e didático possível, apresentando exemplos reais. E evite ser prolixo, redudante e escrever coisas excessivamente grandes. Seja bem direto, e se precisar de uma explicação maior, faça como um acordeão, que ao ser aberto traz o detalhamento que você achou necessário colocar. Gere isso num formato HTML.”
+        </p>
+
+        <p><span class="lbl">Turno 3 — deepseek-v4.1-flash</span></p>
+        <p class="small" style="border-left:2px solid #ddd7c7;padding-left:12px">“E porque coleção 10 e não 11?”</p>
+
+        <p><span class="lbl">Turno 4 — minimax-m3.1-flash</span></p>
+        <p class="small" style="border-left:2px solid #ddd7c7;padding-left:12px">
+          “Acabei de mudar seu modelo do deepssek-v4.1-flash pro Minimax-m3.1-flash. Quero que agora você faça a revisão novamente, mas sendo esse novo modelo. E um ponto de atenção é entender se oq está sendo proposto atende exatamente o que foi colocado pela aluna.”
+        </p>
+
+        <p><span class="lbl">Turno 5 — minimax-m3.1-flash</span></p>
+        <p class="small" style="border-left:2px solid #ddd7c7;padding-left:12px">
+          “No momento, a ideia não é montar mais nada, mas registrar muito bem registrado oq foi feito. Inclusive, registre que foi colocado outro modelo para analisar a conversa (coloque até meu prompt e os modelo) e deixe isso bem documentado. E é importante a apresentação deixar bem claro o resultado que foi obtido. Depois me dite em que pastas essas coisas estão sendo colocadas.”
+        </p>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>Onde está cada coisa (mapa completo dos arquivos)</summary>
+      <div class="body">
+        <p>Razão: <code>C:\Users\amara\estagio-ia\aluna-ciamb\</code></p>
+        <pre><code>aluna-ciamb/
+├── apresentacao.html      esta apresentação (autocontida, 45 KB, sem internet)
+├── README.md              o mesmo registro em texto: métodos, números, cuidados
+├── serie_607.png          série mensal+anual do processo 14962016
+├── serie_612.png          série do processo 42452017 (caso negativo)
+├── serie_607_2019.png     Sentinel-2 RGB 2019 (antes)
+├── serie_607_2020.png     Sentinel-2 RGB 2020 (depois)
+├── codigo/
+│   ├── baixa_asv.py         ASV do WFS do SIGA/GO
+│   ├── analisa_asv.py       detector MapBiomas + NDVI anual
+│   ├── serie_mensal.py      série mensal (S2), anual (Landsat), imagens, figura
+│   ├── atlas_cruzamento.py  ASV × Atlas por amostragem de pontos (GetFeatureInfo)
+│   ├── atlas_cor.py         tentativa por raster (cor → classe) — abandonada
+│   ├── atlas_taxa.py        tentativa de taxa de avanço por raster — abandonada
+│   ├── validar_atlas.py     conferência do GetFeatureInfo contra render grosso
+│   ├── validar_atlas_alta.py conferência contra render local em alta resolução
+│   └── resumo_resultados.py tabelas agregadas
+└── dados/
+    ├── asv_meiaponte.geojson    636 ASVs (13,6 MB)
+    ├── resultado_asv.csv        30 ASVs × 20 colunas (Coleção 11)
+    ├── resultado_asv_c10.csv    o mesmo, com a Coleção 10 (comparação)
+    ├── atlas_pontos.csv         425 pontos com classe do Atlas
+    ├── atlas_por_asv.csv        área estimada por classe do Atlas, por ASV
+    ├── atlas_validacao.csv      teste de acerto do GetFeatureInfo
+    ├── serie_607.csv            série tabular do processo 14962016
+    ├── serie_612.csv            série tabular do processo 42452017
+    └── *.log                    registros das execuções</code></pre>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>O que ficou aberto (nada foi inventado para fechar)</summary>
+      <div class="body">
+        <ul class="tight">
+          <li><b>A “ferramenta” do dia a dia</b> — não entregue. Hoje há scripts de pesquisa; falta o relatório por processo.</li>
+          <li><b>“Taxa de avanço do licenciamento”</b> (item 2) — falta computar <i>área licenciada ÷ remanescente</i>; o que existe é <i>área suprimida ÷ área licenciada</i> (item 3).</li>
+          <li><b>Base vetorial do Atlas</b> — sem ela, a área por classe do Atlas carrega 13% de erro de amostragem. Depende de ofício à SEMAD/LAPIG.</li>
+          <li><b>Desenho amostral</b> — os 30 polígonos são conveniência, com n insuficiente para as classes raras. É decisão da aluna.</li>
+        </ul>
+        <p class="small muted">Nenhum desses foi “resolvido” com aproximação silenciosa: estão declarados no README e nesta apresentação.</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="eyebrow">Para levar para a aula</div>
+    <h2 style="margin-top:10px">Três lições</h2>
+    <div class="licoes">
+      <div class="licao"><div class="n">01</div><p>A IA acerta o código e erra o nome do campo. O erro mora no detalhe que ninguém confere.</p></div>
+      <div class="licao"><div class="n">02</div><p>Número sem conferência cruzada é ficção. O ΔNDVI só valeu porque o grupo de controle ficou em −0,007.</p></div>
+      <div class="licao"><div class="n">03</div><p>O gargalo quase nunca é o que o aluno acha. Aqui, era um WMS disfarçado de base de dados.</p></div>
+    </div>
+    <p class="src">Fontes: WFS público do SIGA/SEMAD-GO (camada <code>vw_asv_ipe_sga_publico</code>), WMS do Atlas Goiás (<code>atlas_remanescentes</code>), MapBiomas Coleção 11 e Sentinel-2 SR Harmonized / Landsat C2 L2 no Google Earth Engine. Execução em 23/10/2026 — turnos 1–3 sob <span class="modelo">deepseek-v4.1-flash</span>, turnos 4–5 sob <span class="modelo">minimax-m3.1-flash</span>.</p>
+  </div>
+</footer>
+
+</body>
+</html>
