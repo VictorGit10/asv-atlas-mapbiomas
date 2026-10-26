@@ -3,6 +3,8 @@
 Material do encontro individual. Tudo aqui foi **executado** com dados públicos
 reais em 23/10/2026. Apresentação (com figuras): `apresentacao.html`.
 
+**No ar:** <https://victorgit10.github.io/asv-atlas-mapbiomas/>
+
 ## Registro da sessão
 
 Uma sessão, cinco pedidos, **dois modelos**.
